@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>Straw Shooter — gamegarden.is</title>
+</head>
+<body>
+
+<video id="camera" autoplay playsinline muted></video>
+<canvas id="canvas"></canvas>
+
+<div id="vignette"></div>
+<div id="flash"></div>
+
+<div id="crosshair">
+  <div class="ch-dot"></div>
+</div>
+
+<div id="target-hp-wrap">
+  <div id="target-hp-bg"><div id="target-hp-fill"></div></div>
+  <div id="target-hp-label">DUMMY</div>
+</div>
+
+<div id="off-arrow">
+  <svg viewBox="0 0 60 60">
+    <polygon points="30,5 50,30 38,30 38,55 22,55 22,30 10,30" fill="#ffaa00" stroke="#000" stroke-width="1"/>
+  </svg>
+  <div id="off-arrow-label">TURN TO TARGET</div>
+</div>
+
+<div id="splash">BULLSEYE!</div>
+<div id="ar-info">📍 DUMMY ANCHORED · 2M FORWARD</div>
+
+<div id="hud-top">
+  <div class="hud-box">
+    <div class="hud-label">HEALTH</div>
+    <div class="hud-value" id="hp-value">100</div>
+    <div id="hp-bar-wrap"><div id="hp-bar" style="width:100%"></div></div>
+  </div>
+  <div class="hud-box">
+    <div class="hud-label">SCORE</div>
+    <div class="hud-value" id="score-value">0</div>
+  </div>
+  <div class="hud-box">
+    <div class="hud-label">AMMO</div>
+    <div class="hud-value" id="ammo-value">12</div>
+  </div>
+</div>
+
+<div id="reload-progress">
+  <p>RELOADING</p>
+  <div id="rp-bg"><div id="rp-bar"></div></div>
+</div>
+
+<div id="hud-bottom">
+  <div id="reload-btn">
+    <span>↺</span><span>RELOAD</span>
+  </div>
+  <div id="fire-btn">FIRE</div>
+</div>
+
+<div id="menu-screen" class="screen">
+  <h1>AR RANGE</h1>
+  <p>The straw dummy will be anchored<br>2 meters in front of you in real space.<br>Turn your phone to find it!</p>
+  <button class="btn green" id="btn-start">▶ START AR</button>
+  <p id="status-line">Camera + motion sensors required</p>
+</div>
+
+<div id="motion-screen" class="screen hidden">
+  <h1 style="color:#ffaa00">ONE MORE STEP</h1>
+  <p>iOS needs permission to use<br>motion sensors for AR tracking</p>
+  <button class="btn" id="btn-motion">ALLOW MOTION ACCESS</button>
+</div>
+
+<div id="dead-screen" class="screen hidden">
+  <h1 style="color:#ff3300">GAME OVER</h1>
+  <div style="font-size:64px;font-weight:900;color:#ff4400;line-height:1;" id="final-score">0</div>
+  <div style="font-size:11px;letter-spacing:3px;color:rgba(255,120,80,0.7);" id="final-hits">0 HITS</div>
+  <button class="btn red" id="btn-restart">PLAY AGAIN</button>
+</div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
