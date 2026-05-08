@@ -1,35 +1,30 @@
+import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { MenuScreen } from './src/screens/MenuScreen';
+import { GameScreen } from './src/screens/GameScreen';
+import { GameOverScreen } from './src/screens/GameOverScreen';
+
+type Screen = 'menu' | 'game' | 'gameover';
 
 export default function App() {
+  const [screen, setScreen]         = useState<Screen>('menu');
+  const [finalScore, setFinalScore] = useState(0);
+  const [finalHits,  setFinalHits]  = useState(0);
+  const [finalWave,  setFinalWave]  = useState(1);
+
+  const handleGameOver = (score: number, hits: number, wave: number) => {
+    setFinalScore(score);
+    setFinalHits(hits);
+    setFinalWave(wave);
+    setScreen('gameover');
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>GLITCH RAID</Text>
-      <Text style={styles.sub}>AR phase loading...</Text>
-      <StatusBar style="light" />
-    </View>
+    <>
+      <StatusBar style="light" hidden />
+      {screen === 'menu'     && <MenuScreen     onStart={() => setScreen('game')} />}
+      {screen === 'game'     && <GameScreen     onGameOver={handleGameOver} />}
+      {screen === 'gameover' && <GameOverScreen score={finalScore} hits={finalHits} wave={finalWave} onRestart={() => setScreen('menu')} />}
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0a0a0a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: '900',
-    letterSpacing: 8,
-    color: '#00ffcc',
-    fontFamily: 'monospace',
-  },
-  sub: {
-    marginTop: 12,
-    fontSize: 11,
-    letterSpacing: 3,
-    color: 'rgba(0,255,200,0.4)',
-    fontFamily: 'monospace',
-  },
-});
