@@ -1,18 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { CameraView } from 'expo-camera';
-import { useOrientation } from '../game/useOrientation';
+import type { ScreenPos } from '../game/useARCameraPose';
 import { Sounds } from '../game/sounds';
-import { DummyView } from '../ui/DummyView';
 import { HUD } from '../ui/HUD';
 import { Controls } from '../ui/Controls';
 import { Crosshair } from '../ui/Crosshair';
 
 const { width: W, height: H } = Dimensions.get('window');
 
-const DUMMY_SIZE   = Math.min(W, H) * 0.45;
-const HITBOX_W     = DUMMY_SIZE * 0.3;
-const HITBOX_H     = DUMMY_SIZE * 0.8;
+// Hitbox for the 3D dummy in screen space — tunable
+const HITBOX_W = W * 0.12;
+const HITBOX_H = H * 0.35;
 const MAX_HP       = 100;
 const MAX_AMMO     = 12;
 const DUMMY_MAX_HP = 6;
@@ -27,11 +25,14 @@ const dummyMaxHpForWave   = (w: number) => DUMMY_MAX_HP + (w - 1) * 2;
 const respawnDelayForWave = (w: number) => Math.max(800, 2000 - (w - 1) * 200);
 
 interface Props {
-  onGameOver: (score: number, hits: number, wave: number) => void;
+  pos:            ScreenPos | null;
+  onGameOver:     (score: number, hits: number, wave: number) => void;
+  onDummyHit:     () => void;
+  onDummyDied:    () => void;
+  onDummyRespawn: () => void;
 }
 
-export function GameScreen({ onGameOver }: Props) {
-  const { pos, setAnchor } = useOrientation();
+export function GameScreen({ pos, onGameOver, onDummyHit, onDummyDied, onDummyRespawn }: Props) {
 
   const [hp,        setHp]        = useState(MAX_HP);
   const [ammo,      setAmmo]      = useState(MAX_AMMO);
@@ -62,12 +63,6 @@ export function GameScreen({ onGameOver }: Props) {
 
   // Keep posRef current for use inside intervals
   useEffect(() => { posRef.current = pos; }, [pos]);
-
-  // Anchor the dummy when the game starts
-  useEffect(() => {
-    const t = setTimeout(() => setAnchor(), 400);
-    return () => clearTimeout(t);
-  }, []);
 
   const doGameOver = useCallback(() => {
     if (gameOverFired.current) return;
@@ -124,10 +119,12 @@ export function GameScreen({ onGameOver }: Props) {
     dummyHpRef.current = newHp;
     setDummyHp(newHp);
     Sounds.hit();
+    onDummyHit();
 
     if (newHp === 0) {
       dummyDeadRef.current = true;
       setDummyDead(true);
+      onDummyDied();
       scoreRef.current += 50;
       hitsRef.current  += 1;
       waveRef.current  += 1;
@@ -142,6 +139,7 @@ export function GameScreen({ onGameOver }: Props) {
         dummyHpRef.current   = nextMaxHp;
         setDummyDead(false);
         setDummyHp(nextMaxHp);
+        onDummyRespawn();
       }, respawnDelayForWave(waveRef.current));
     } else {
       scoreRef.current += 10;
@@ -150,7 +148,7 @@ export function GameScreen({ onGameOver }: Props) {
       setHits(hitsRef.current);
       showSplash(SPLASHES[Math.floor(Math.random() * SPLASHES.length)]);
     }
-  }, [showSplash]);
+  }, [showSplash, onDummyHit, onDummyDied, onDummyRespawn]);
 
   const doReload = useCallback(() => {
     if (reloadingRef.current || ammoRef.current === MAX_AMMO) return;
@@ -173,17 +171,18 @@ export function GameScreen({ onGameOver }: Props) {
     Sounds.fire();
     triggerFlash();
 
-    // Hit check: is dummy near crosshair (screen center)?
-    if (pos && pos.visible && !dummyDeadRef.current) {
-      const dx = Math.abs(W / 2 - pos.x);
-      const dy = Math.abs(H / 2 - pos.y);
+    // Hit check: use posRef so doFire isn't recreated on every camera update
+    const p = posRef.current;
+    if (p && p.visible && !dummyDeadRef.current) {
+      const dx = Math.abs(W / 2 - p.x);
+      const dy = Math.abs(H / 2 - p.y);
       if (dx < HITBOX_W && dy < HITBOX_H) {
         doHitDummy();
       }
     }
 
     if (ammoRef.current === 0) setTimeout(doReload, 350);
-  }, [pos, doReload, doHitDummy, triggerFlash]);
+  }, [doReload, doHitDummy, triggerFlash]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -194,14 +193,8 @@ export function GameScreen({ onGameOver }: Props) {
     };
   }, []);
 
-  const dummyLeft = pos ? pos.x - DUMMY_SIZE / 2 : W / 2 - DUMMY_SIZE / 2;
-  const dummyTop  = pos ? pos.y - DUMMY_SIZE * 0.9 : H / 2 - DUMMY_SIZE * 0.9;
-
   return (
     <View style={styles.container}>
-      {/* Camera background */}
-      <CameraView style={StyleSheet.absoluteFill} facing="back" />
-
       {/* Muzzle flash overlay */}
       {flash > 0 && <View style={styles.flash} pointerEvents="none" />}
 
@@ -211,37 +204,13 @@ export function GameScreen({ onGameOver }: Props) {
       {/* Vignette */}
       <View style={styles.vignette} pointerEvents="none" />
 
-      {/* Straw dummy */}
-      {pos && (
-        <View
-          style={[styles.dummyWrap, { left: dummyLeft, top: dummyTop }]}
-          pointerEvents="none"
-        >
-          <DummyView
-            size={DUMMY_SIZE}
-            flash={flash}
-            dead={dummyDead}
-            holes={dummyMaxHpForWave(wave) - dummyHp}
-          />
-          {/* Dummy HP bar */}
-          {!dummyDead && (
-            <View style={styles.targetHpWrap}>
-              <View style={styles.targetHpBg}>
-                <View style={[styles.targetHpFill, { width: `${(dummyHp / dummyMaxHpForWave(wave)) * 100}%` }]} />
-              </View>
-              <Text style={styles.targetLabel}>DUMMY</Text>
-            </View>
-          )}
-        </View>
-      )}
-
       {/* Off-screen indicator */}
       {pos && !pos.visible && (
         <View style={styles.offScreen} pointerEvents="none">
           <Text style={styles.offArrow}>
             {Math.abs(pos.dAlpha) > Math.abs(pos.dBeta)
-              ? pos.dAlpha > 0 ? '← TURN LEFT' : 'TURN RIGHT →'
-              : pos.dBeta  > 0 ? '↓ LOOK DOWN' : '↑ LOOK UP'}
+              ? pos.dAlpha > 0 ? 'TURN RIGHT →' : '← TURN LEFT'
+              : pos.dBeta  > 0 ? '↑ LOOK UP'   : '↓ LOOK DOWN'}
           </Text>
         </View>
       )}
@@ -261,16 +230,11 @@ export function GameScreen({ onGameOver }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container:   { flex: 1, backgroundColor: '#000' },
+  container:   { ...StyleSheet.absoluteFillObject, backgroundColor: 'transparent' },
   flash:       { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,220,120,0.25)', zIndex: 5 },
   damageFlash: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,0,0,0.35)', zIndex: 6 },
   vignette:    { ...StyleSheet.absoluteFillObject, zIndex: 2 },
-  dummyWrap:   { position: 'absolute', zIndex: 3, alignItems: 'center' },
-  targetHpWrap:{ width: 120, marginTop: 6, alignItems: 'center' },
-  targetHpBg:  { width: '100%', height: 7, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 4, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  targetHpFill:{ height: '100%', backgroundColor: '#ff4400', borderRadius: 4 },
-  targetLabel: { fontSize: 9, letterSpacing: 2, color: 'rgba(255,180,100,0.7)', marginTop: 3, fontFamily: 'monospace' },
-  offScreen:   { position: 'absolute', top: '50%', left: 0, right: 0, alignItems: 'center', zIndex: 10 },
+  offScreen:{ position: 'absolute', top: '50%', left: 0, right: 0, alignItems: 'center', zIndex: 10 },
   offArrow:    { fontSize: 11, letterSpacing: 2, color: '#ffaa00', fontFamily: 'monospace', textShadowColor: '#000', textShadowRadius: 4 },
   splashWrap:  { position: 'absolute', top: '30%', left: 0, right: 0, alignItems: 'center', zIndex: 12 },
   splash:      { fontSize: 26, fontWeight: '900', letterSpacing: 4, color: '#ffcc00', fontFamily: 'monospace', textShadowColor: '#ff8800', textShadowRadius: 10 },

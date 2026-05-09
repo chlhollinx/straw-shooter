@@ -48,11 +48,11 @@
 | 2.2 | Run `npx expo prebuild` to eject to bare workflow | ✅ |
 | 2.3 | Add ViroReact to build config (`android/app/build.gradle`) | ✅ |
 | 2.4 | Confirm `ViroARSceneNavigator` renders on device (blank AR scene) | ✅ |
-| 2.5 | Surface detection — floor plane detected, show animated grid overlay | ⬜ |
-| 2.6 | Player taps floor → place a static 3D cube anchored to real surface | ⬜ |
-| 2.7 | **6DOF confirmed** — walk around the cube; it stays in place in real space | ⬜ |
-| 2.8 | Replace orientation hook with ARCore camera pose for dummy positioning | ⬜ |
-| 2.9 | Surface scan screen added between Menu and Game | ⬜ |
+| 2.5 | Surface detection — floor plane detected, show animated grid overlay | ✅ |
+| 2.6 | Player taps floor → place a static 3D cube anchored to real surface | ✅ |
+| 2.7 | **6DOF confirmed** — walk around the cube; it stays in place in real space | ✅ |
+| 2.8 | Replace orientation hook with ARCore camera pose for dummy positioning | ✅ |
+| 2.9 | Surface scan screen added between Menu and Game | ✅ |
 
 **Done when:** You place a box on your floor and walk around it — it stays anchored.
 
@@ -140,9 +140,9 @@
 
 ---
 
-## Current Sprint: Epic 1
+## Current Sprint: Epic 3
 
-**Next task to pick up:** Story 1.1 — add a 90-second countdown timer that triggers `onGameOver`.
+**Next task to pick up:** Story 3.1 — Crawler entity placeholder cube with HP, moves toward player at 0.8 m/s.
 
 ---
 
