@@ -32,7 +32,7 @@
 | 1.5 | **Fire sound** — play a short click/zap sound on fire (expo-av) | ✅ |
 | 1.6 | **Hit sound** — play a thud when dummy is hit | ✅ |
 | 1.7 | **Game over screen** — show wave reached + score + high score (AsyncStorage) | ✅ |
-| 1.8 | **Test session** — play 3 full rounds, fix any feel issues | ⬜ |
+| 1.8 | **Test session** — play 3 full rounds, fix any feel issues | ✅ |
 
 **Done when:** You can start a game, shoot the dummy for 90 seconds, and reach a game over screen with a score.
 
@@ -44,10 +44,10 @@
 
 | # | Story | Status |
 |---|-------|--------|
-| 2.1 | Install Android Studio + Android SDK + ARCore emulator | ⬜ |
-| 2.2 | Run `npx expo prebuild` to eject to bare workflow | ⬜ |
-| 2.3 | Add ViroReact to build config (`android/app/build.gradle`) | ⬜ |
-| 2.4 | Confirm `ViroARSceneNavigator` renders on device (blank AR scene) | ⬜ |
+| 2.1 | Install Android Studio + Android SDK + ARCore emulator | ✅ |
+| 2.2 | Run `npx expo prebuild` to eject to bare workflow | ✅ |
+| 2.3 | Add ViroReact to build config (`android/app/build.gradle`) | ✅ |
+| 2.4 | Confirm `ViroARSceneNavigator` renders on device (blank AR scene) | ✅ |
 | 2.5 | Surface detection — floor plane detected, show animated grid overlay | ⬜ |
 | 2.6 | Player taps floor → place a static 3D cube anchored to real surface | ⬜ |
 | 2.7 | **6DOF confirmed** — walk around the cube; it stays in place in real space | ⬜ |

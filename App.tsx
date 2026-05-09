@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { MenuScreen } from './src/screens/MenuScreen';
 import { GameScreen } from './src/screens/GameScreen';
 import { GameOverScreen } from './src/screens/GameOverScreen';
+import { ARTestScene } from './src/ar/ARTestScene';
 
 type Screen = 'menu' | 'game' | 'gameover';
 
@@ -23,7 +24,7 @@ export default function App() {
     <>
       <StatusBar style="light" hidden />
       {screen === 'menu'     && <MenuScreen     onStart={() => setScreen('game')} />}
-      {screen === 'game'     && <GameScreen     onGameOver={handleGameOver} />}
+      {screen === 'game'     && <ARTestScene />}
       {screen === 'gameover' && <GameOverScreen score={finalScore} hits={finalHits} wave={finalWave} onRestart={() => setScreen('menu')} />}
     </>
   );

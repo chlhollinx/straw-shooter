@@ -36,7 +36,14 @@
         {
           "cameraPermission": "Camera is required for AR gameplay."
         }
-      ]
+      ],
+      [
+        "@viro-community/react-viro",
+        {
+          "android": { "xRMode": ["AR"] }
+        }
+      ],
+      "./plugins/withViroMainApplicationFix.js"
     ]
   }
 }
