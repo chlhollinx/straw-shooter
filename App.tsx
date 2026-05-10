@@ -8,6 +8,7 @@ import { MainARScene } from './src/ar/MainARScene';
 import { ARSceneNavigator } from './src/ar/ARSceneNavigator';
 import { useARCameraPose, projectToScreen } from './src/game/useARCameraPose';
 import { useDummies, type Dummy } from './src/game/useDummies';
+import type { GameResult } from './src/screens/GameScreen';
 
 const { width: W, height: H } = Dimensions.get('window');
 const HITBOX_RADIUS = 120; // px from crosshair — generous for AR aim feel
@@ -18,9 +19,10 @@ type ARPhase = 'scan' | 'game';
 export default function App() {
   const [screen,     setScreen]     = useState<Screen>('menu');
   const [arPhase,    setARPhase]    = useState<ARPhase>('scan');
-  const [finalScore, setFinalScore] = useState(0);
-  const [finalHits,  setFinalHits]  = useState(0);
-  const [finalWave,  setFinalWave]  = useState(1);
+  const [finalResult,  setFinalResult]  = useState<GameResult>('lose');
+  const [finalScore,   setFinalScore]   = useState(0);
+  const [finalBlueHit, setFinalBlueHit] = useState(0);
+  const [finalStrikes, setFinalStrikes] = useState(0);
 
   const { cameraStateRef, onCameraTransform } = useARCameraPose();
   const { dummies, spawn, hitDummy, reset }   = useDummies();
@@ -66,10 +68,11 @@ export default function App() {
     setARPhase('game');
   };
 
-  const handleGameOver = (score: number, hits: number, wave: number) => {
+  const handleGameOver = (result: GameResult, score: number, blueHit: number, strikes: number) => {
+    setFinalResult(result);
     setFinalScore(score);
-    setFinalHits(hits);
-    setFinalWave(wave);
+    setFinalBlueHit(blueHit);
+    setFinalStrikes(strikes);
     setScreen('gameover');
   };
 
@@ -104,9 +107,10 @@ export default function App() {
 
       {screen === 'gameover' && (
         <GameOverScreen
+          result={finalResult}
           score={finalScore}
-          hits={finalHits}
-          wave={finalWave}
+          blueHit={finalBlueHit}
+          strikes={finalStrikes}
           onRestart={handleRestart}
         />
       )}

@@ -12,8 +12,8 @@ export interface Dummy {
 }
 
 const TOTAL_DUMMIES = 15;
-const BLUE_COUNT    = 10;
-const RED_COUNT     = 5;
+const BLUE_COUNT    = 8;
+const RED_COUNT     = 7;
 const RING_RADIUS   = 2.5; // metres from anchor
 const RADIUS_JITTER = 0.3; // ±15 cm
 const HEIGHT_MIN    = 0;

@@ -1,27 +1,32 @@
 import { View, Text, StyleSheet } from 'react-native';
 
 interface Props {
-  hp: number;
-  maxHp: number;
-  ammo: number;
-  maxAmmo: number;
-  score: number;
-  reloading: boolean;
-  timeLeft: number;
-  wave: number;
+  blueHit:    number;
+  blueNeeded: number;
+  strikes:    number;
+  maxStrikes: number;
+  ammo:       number;
+  maxAmmo:    number;
+  reloading:  boolean;
+  timeLeft:   number;
 }
 
-export function HUD({ hp, maxHp, ammo, maxAmmo, score, reloading, timeLeft, wave }: Props) {
+const STRIKE_COLORS = ['#ffffff', '#ffaa00', '#ff6600', '#ff2222'];
+
+export function HUD({ blueHit, blueNeeded, strikes, maxStrikes, ammo, reloading, timeLeft }: Props) {
   const mins = Math.floor(timeLeft / 60);
   const secs = String(timeLeft % 60).padStart(2, '0');
+  const blueProgress = Math.min(blueHit / blueNeeded, 1);
+  const strikeColor  = STRIKE_COLORS[Math.min(strikes, STRIKE_COLORS.length - 1)];
+
   return (
     <View style={styles.row} pointerEvents="none">
-      {/* Health */}
+      {/* Blue progress */}
       <View style={styles.box}>
-        <Text style={styles.label}>HEALTH</Text>
-        <Text style={[styles.value, { color: '#ff5555' }]}>{hp}</Text>
+        <Text style={styles.label}>BLUE</Text>
+        <Text style={[styles.value, { color: '#3b82f6' }]}>{blueHit}/{blueNeeded}</Text>
         <View style={styles.barBg}>
-          <View style={[styles.barFill, { width: `${(hp / maxHp) * 100}%`, backgroundColor: '#ff5555' }]} />
+          <View style={[styles.barFill, { width: `${blueProgress * 100}%`, backgroundColor: '#3b82f6' }]} />
         </View>
       </View>
 
@@ -33,10 +38,10 @@ export function HUD({ hp, maxHp, ammo, maxAmmo, score, reloading, timeLeft, wave
         </Text>
       </View>
 
-      {/* Wave + Score */}
+      {/* Strikes */}
       <View style={styles.box}>
-        <Text style={styles.label}>WAVE {wave}</Text>
-        <Text style={[styles.value, { color: '#55ffaa' }]}>{score}</Text>
+        <Text style={styles.label}>STRIKES</Text>
+        <Text style={[styles.value, { color: strikeColor }]}>{strikes}/{maxStrikes}</Text>
       </View>
 
       {/* Ammo */}

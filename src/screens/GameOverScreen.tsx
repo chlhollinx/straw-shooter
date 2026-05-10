@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { GameResult } from './GameScreen';
 
 const HS_KEY = 'glitchraid_highscore';
 
 interface Props {
-  score: number;
-  hits: number;
-  wave: number;
+  result:    GameResult;
+  score:     number;
+  blueHit:   number;
+  strikes:   number;
   onRestart: () => void;
 }
 
-export function GameOverScreen({ score, hits, wave, onRestart }: Props) {
+export function GameOverScreen({ result, score, blueHit, strikes, onRestart }: Props) {
   const [highScore, setHighScore] = useState<number | null>(null);
   const [isNewBest, setIsNewBest] = useState(false);
 
@@ -29,12 +31,18 @@ export function GameOverScreen({ score, hits, wave, onRestart }: Props) {
     })();
   }, []);
 
+  const isWin       = result === 'win';
+  const titleText   = isWin ? 'VICTORY' : 'GAME OVER';
+  const accentColor = isWin ? '#00ddaa' : '#ff4400';
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>GAME OVER</Text>
+      <Text style={[styles.title, { color: accentColor }]}>{titleText}</Text>
 
-      <Text style={styles.score}>{score}</Text>
-      <Text style={styles.sub}>{hits} HITS · WAVE {wave}</Text>
+      <Text style={[styles.score, { color: accentColor }]}>{score}</Text>
+      <Text style={[styles.sub, { color: isWin ? 'rgba(0,221,170,0.7)' : 'rgba(255,120,80,0.7)' }]}>
+        {blueHit} BLUE · {strikes} STRIKES
+      </Text>
 
       {highScore !== null && (
         <View style={styles.hsRow}>
@@ -43,8 +51,8 @@ export function GameOverScreen({ score, hits, wave, onRestart }: Props) {
         </View>
       )}
 
-      <Pressable onPress={onRestart} style={styles.btn}>
-        <Text style={styles.btnText}>PLAY AGAIN</Text>
+      <Pressable onPress={onRestart} style={[styles.btn, { borderColor: accentColor }]}>
+        <Text style={[styles.btnText, { color: accentColor }]}>PLAY AGAIN</Text>
       </Pressable>
     </View>
   );
@@ -62,20 +70,17 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: '900',
     letterSpacing: 6,
-    color: '#ff3300',
     fontFamily: 'monospace',
   },
   score: {
     fontSize: 72,
     fontWeight: '900',
-    color: '#ff4400',
     fontFamily: 'monospace',
     lineHeight: 80,
   },
   sub: {
     fontSize: 12,
     letterSpacing: 3,
-    color: 'rgba(255,120,80,0.7)',
     fontFamily: 'monospace',
   },
   hsRow: {
@@ -98,7 +103,6 @@ const styles = StyleSheet.create({
   btn: {
     marginTop: 12,
     borderWidth: 2,
-    borderColor: '#ff4400',
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 3,
@@ -107,7 +111,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 3,
-    color: '#ff4400',
     fontFamily: 'monospace',
   },
 });

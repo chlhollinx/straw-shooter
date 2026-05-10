@@ -67,13 +67,68 @@
 | 3.1 | **Dummy entity** — static blue/red cube with single HP; rip out old Crawler code | ✅ |
 | 3.2 | **Spawn ring** — 15 dummies (10 blue, 5 red) in ring around anchor, ~2.5 m radius, heights 0–1.5 m | ✅ |
 | 3.3 | **Multi-target hit detection** — project all dummy positions to screen; nearest to crosshair within hitbox = hit | ✅ |
-| 3.4 | **Score + strikes** — blue = +100 score, red = +1 strike; HUD shows blue/needed and strikes/3 | ⬜ |
-| 3.5 | **Win / lose conditions** — 8+ blue before timer = win; 3 strikes OR timer with <8 blue = lose | ⬜ |
-| 3.6 | **GameOver screen** — show win/lose, blue hits, strikes, time used | ⬜ |
-| 3.7 | **Feedback** — distinct sounds for blue hit / red hit / miss; red flash on strike | ⬜ |
-| 3.8 | **Perfect clear bonus** — all 10 blue hit = bonus score on win | ⬜ |
+| 3.4 | **Score + strikes** — blue = +100 score, red = +1 strike; HUD shows blue/needed and strikes/3 | ✅ |
+| 3.5 | **Win / lose conditions** — 8+ blue before timer = win; 3 strikes OR timer with <8 blue = lose | ✅ |
+| 3.6 | **GameOver screen** — show win/lose, blue hits, strikes, time used | ✅ |
+| 3.7 | **Feedback** — distinct haptics for blue hit / red hit / dry-fire; red flash on strike | ✅ |
+| 3.8 | **Time bonus** — winning adds `timeLeft × 10` to final score (replaces obsolete "perfect clear" since ratio now requires hitting all 8 blue to win) | ✅ |
 
 **Done when:** A full Level 1 round plays end-to-end with clear win/lose feedback.
+
+---
+
+## Test Plan — Epic 3
+
+End-to-end manual test for Target Practice (Level 1). **Requires `npx expo run:android`** to pick up the landscape orientation change.
+
+### Setup
+- [ ] App launches in **landscape**
+- [ ] Menu shows "START GAME" → tap → AR scan phase
+- [ ] Point at the floor → grid overlay appears
+- [ ] Tap the floor → green anchor box appears, then game phase begins
+
+### Spawn ring (Story 3.2)
+- [ ] ~15 dummies appear in a ring around the anchor (not all in one spot)
+- [ ] Mix of **blue** and **red** dummies (8 blue / 7 red, randomly distributed)
+- [ ] Heights vary — some near floor, some shoulder-height, some up high
+- [ ] Walking around the anchor reveals dummies on every side
+
+### Hit detection (3.3)
+- [ ] Aim at a dummy → fire → it disappears
+- [ ] Aim near (but not on) a dummy → fire → no hit
+- [ ] Two dummies aligned with crosshair → only the one nearest to centre is hit
+
+### Score & strikes (3.4)
+- [ ] Blue hit: **BLUE** counter increments (e.g. 0/8 → 1/8); blue progress bar fills
+- [ ] Red hit: **STRIKES** counter increments (0/3 → 1/3 → 2/3); colour escalates white → orange → red
+
+### Feedback (3.7)
+- [ ] Blue hit: heavy haptic thump
+- [ ] Red hit: error-style haptic burst + **red screen flash** (~250 ms)
+- [ ] Dry-fire (empty mag): warning haptic
+- [ ] Distinct feel between blue and red hits
+
+### Win (3.5/3.6/3.8)
+- [ ] Hit all 8 blue → ends immediately → **VICTORY** screen in cyan-green
+- [ ] Final score includes time bonus (`timeLeft × 10`) — verify with a quick win vs slow win
+- [ ] Subtitle shows `8 BLUE · X STRIKES`
+- [ ] First win records "NEW BEST"
+
+### Lose (3.5/3.6)
+- [ ] Hit 3 reds → ends immediately → **GAME OVER** in red
+- [ ] Run timer to 0:00 with <8 blue → **GAME OVER** in red
+- [ ] Subtitle shows actual blue/strikes counts
+
+### Restart loop
+- [ ] "PLAY AGAIN" button → returns to menu
+- [ ] New round spawns a fresh ring (different colour distribution)
+- [ ] Score and counters reset to zero
+
+### Sanity
+- [ ] HUD timer counts down 0:60 → 0:00, turns red ≤10 s
+- [ ] Ammo: 12 → 0 → auto-reload (1.6 s) → 12
+- [ ] No crashes when looking past the dummies / off-screen
+- [ ] No "setState during render" warnings in console
 
 ---
 
@@ -140,9 +195,9 @@
 
 ---
 
-## Current Sprint: Epic 3
+## Current Sprint: Epic 3 — Complete (pending playtest)
 
-**Next task to pick up:** Story 3.4 — Score + strikes: blue hit = +100, red hit = +1 strike; HUD shows blue/needed and strikes/3.
+**Next task to pick up:** Run the Epic 3 Test Plan above on device. After it passes, move to Epic 4 (Story 4.1 — Level transition screen).
 
 ---
 
