@@ -1,18 +1,21 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { Dimensions } from 'react-native';
 
 const { width: W, height: H } = Dimensions.get('window');
-// Approximate ARCore vertical FOV — tune if dummy is consistently offset
 const FOV_Y_DEG = 60;
 const FOV_X_DEG = FOV_Y_DEG * (W / H);
 
 type Vec3 = [number, number, number];
 
+export interface CameraState {
+  position: Vec3;
+  forward:  Vec3;
+  up:       Vec3;
+}
+
 export interface ScreenPos {
   x:       number;
   y:       number;
-  dAlpha:  number;
-  dBeta:   number;
   visible: boolean;
 }
 
@@ -32,17 +35,16 @@ function sub(a: Vec3, b: Vec3): Vec3 {
   return [a[0]-b[0], a[1]-b[1], a[2]-b[2]];
 }
 
-function project(anchor: Vec3, camPos: Vec3, forward: Vec3, up: Vec3): ScreenPos {
-  const right    = cross(forward, up);
-  const toTarget = sub(anchor, camPos);
-  const depth    = dot(toTarget, forward);
+// Used by hit detection (Story 3.3) to project each dummy's world position to screen.
+export function projectToScreen(target: Vec3, camera: CameraState): ScreenPos {
+  const right    = cross(camera.forward, camera.up);
+  const toTarget = sub(target, camera.position);
+  const depth    = dot(toTarget, camera.forward);
 
-  if (depth <= 0) {
-    return { x: W/2, y: H/2, dAlpha: 180, dBeta: 0, visible: false };
-  }
+  if (depth <= 0) return { x: W/2, y: H/2, visible: false };
 
   const px = dot(toTarget, right);
-  const py = dot(toTarget, up);
+  const py = dot(toTarget, camera.up);
 
   const tanX = Math.tan((FOV_X_DEG / 2) * (Math.PI / 180));
   const tanY = Math.tan((FOV_Y_DEG / 2) * (Math.PI / 180));
@@ -53,28 +55,23 @@ function project(anchor: Vec3, camPos: Vec3, forward: Vec3, up: Vec3): ScreenPos
   return {
     x:       W/2 + ndcX * (W/2),
     y:       H/2 - ndcY * (H/2),
-    dAlpha:  Math.atan2(px, depth) * (180 / Math.PI),
-    dBeta:   Math.atan2(py, depth) * (180 / Math.PI),
     visible: Math.abs(ndcX) <= 1 && Math.abs(ndcY) <= 1,
   };
 }
 
-export function useARCameraPose(anchorPos: Vec3) {
-  const anchorRef    = useRef(anchorPos);
-  const lastUpdate   = useRef(0);
-  anchorRef.current  = anchorPos;
-
-  const [pos, setPos] = useState<ScreenPos | null>(null);
+export function useARCameraPose() {
+  const cameraStateRef = useRef<CameraState | null>(null);
+  const lastUpdate     = useRef(0);
 
   const onCameraTransform = useCallback((event: {
     cameraTransform: { position: Vec3; forward: Vec3; up: Vec3; rotation: Vec3 };
   }) => {
     const now = Date.now();
-    if (now - lastUpdate.current < 50) return; // cap at ~20fps
+    if (now - lastUpdate.current < 50) return;
     lastUpdate.current = now;
     const { position, forward, up } = event.cameraTransform;
-    setPos(project(anchorRef.current, position, forward, up));
+    cameraStateRef.current = { position, forward, up };
   }, []);
 
-  return { pos, onCameraTransform };
+  return { cameraStateRef, onCameraTransform };
 }

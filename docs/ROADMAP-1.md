@@ -1,7 +1,7 @@
 # glitch-raid — Development Roadmap
 **Format:** Epics → Stories → Tasks  
 **Status key:** ✅ Done · 🔄 In progress · ⬜ Not started  
-**Last updated:** 2026-05-08
+**Last updated:** 2026-05-10
 
 ---
 
@@ -58,40 +58,40 @@
 
 ---
 
-## Epic 3 — Combat Feels Good
-> Shooting glitch entities in AR is satisfying and readable.
+## Epic 3 — Target Practice (Level 1)
+> Genshin-style daily commission: 15 static dummies in a ring around the anchor. Shoot blue, avoid red. 60s timer.
+> ⚠️ Rewrites earlier "Crawler" approach — chasing enemies phase through real walls without depth-mesh occlusion. Static targets sidestep the problem.
 
 | # | Story | Status |
 |---|-------|--------|
-| 3.1 | **Crawler entity** — placeholder cube with HP, moves toward player at 0.8 m/s | ⬜ |
-| 3.2 | **Raycasting** — fire button casts ray from camera center, hits entity hitbox | ⬜ |
-| 3.3 | **Entity takes damage** — flash red on hit, disappears on death | ⬜ |
-| 3.4 | **Entity attacks player** — distance < 1.5m triggers 15 HP damage (1s cooldown) | ⬜ |
-| 3.5 | **Wave 1** — spawn 3 Crawlers; wave clear when all dead | ⬜ |
-| 3.6 | **Game over** — player HP = 0 ends game; GameOver screen shows score + wave | ⬜ |
-| 3.7 | **Spatial audio** — entity walk sound comes from entity AR position | ⬜ |
-| 3.8 | **Feel pass** — muzzle flash, hit sparks, death particle burst | ⬜ |
+| 3.1 | **Dummy entity** — static blue/red cube with single HP; rip out old Crawler code | ✅ |
+| 3.2 | **Spawn ring** — 15 dummies (10 blue, 5 red) in ring around anchor, ~2.5 m radius, heights 0–1.5 m | ✅ |
+| 3.3 | **Multi-target hit detection** — project all dummy positions to screen; nearest to crosshair within hitbox = hit | ✅ |
+| 3.4 | **Score + strikes** — blue = +100 score, red = +1 strike; HUD shows blue/needed and strikes/3 | ⬜ |
+| 3.5 | **Win / lose conditions** — 8+ blue before timer = win; 3 strikes OR timer with <8 blue = lose | ⬜ |
+| 3.6 | **GameOver screen** — show win/lose, blue hits, strikes, time used | ⬜ |
+| 3.7 | **Feedback** — distinct sounds for blue hit / red hit / miss; red flash on strike | ⬜ |
+| 3.8 | **Perfect clear bonus** — all 10 blue hit = bonus score on win | ⬜ |
 
-**Done when:** You can play and lose a full round against 3 entities in AR.
+**Done when:** A full Level 1 round plays end-to-end with clear win/lose feedback.
 
 ---
 
-## Epic 4 — All Entities + Wave System
-> Full content slate. All 4 enemy types. Escalating waves.
+## Epic 4 — Levels & Polish
+> Add Level 2 (arena around player) and beyond. Difficulty curve. Real models, audio, particles.
 
 | # | Story | Status |
 |---|-------|--------|
-| 4.1 | **Runner** — fast (2.5 m/s), 25 HP, teleport-step animation | ⬜ |
-| 4.2 | **Tank** — slow (0.4 m/s), 200 HP, 40 damage, heavy footstep audio | ⬜ |
-| 4.3 | **Glitcher** — phases in/out every 1.5s; only hittable while visible | ⬜ |
-| 4.4 | **Wave composition table** — wave N spawns entity mix per TECHDOC §6.2 | ⬜ |
-| 4.5 | **Wave clear screen** — 3s screen between waves showing wave number + bonus | ⬜ |
-| 4.6 | **Scatter Burst weapon** — unlocks at wave 3 as AR loot drop | ⬜ |
-| 4.7 | **GLB models** — replace placeholder cubes with real glitch entity models | ⬜ |
-| 4.8 | **Animations** — idle, walk, attack, hit, death per entity (Mixamo source) | ⬜ |
-| 4.9 | **Music** — ambient loop in menu, reactive loop in-game | ⬜ |
+| 4.1 | **Level transition screen** — between rounds: "LEVEL CLEARED" + Next button | ⬜ |
+| 4.2 | **Level 2: arena around player** — dummies spawn in sphere centred on player's pose at round start | ⬜ |
+| 4.3 | **Difficulty curve** — Level N: more dummies, higher red ratio, shorter timer, higher minimum | ⬜ |
+| 4.4 | **High score** — track best level reached + best score per level (AsyncStorage) | ⬜ |
+| 4.5 | **GLB models** — replace blue/red boxes with proper dummy models (Mixamo-rigged) | ⬜ |
+| 4.6 | **Death effect** — particle burst / shatter on dummy kill | ⬜ |
+| 4.7 | **Subtle red telegraphs** — red dummies have subtle pulse/glow so they're readable from distance | ⬜ |
+| 4.8 | **Music** — ambient menu loop + reactive in-game loop (tempo rises as time runs out) | ⬜ |
 
-**Done when:** A stranger picks it up and knows how to play without being told.
+**Done when:** Levels 1–3 are playable, distinct, and feel polished.
 
 ---
 
@@ -142,7 +142,7 @@
 
 ## Current Sprint: Epic 3
 
-**Next task to pick up:** Story 3.1 — Crawler entity placeholder cube with HP, moves toward player at 0.8 m/s.
+**Next task to pick up:** Story 3.4 — Score + strikes: blue hit = +100, red hit = +1 strike; HUD shows blue/needed and strikes/3.
 
 ---
 

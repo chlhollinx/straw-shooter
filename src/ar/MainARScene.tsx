@@ -9,12 +9,14 @@ import {
   ViroMaterials,
 } from '@viro-community/react-viro';
 import { PlaneGrid } from './components/PlaneGrid';
+import type { Dummy } from '../game/useDummies';
 
 ViroMaterials.createMaterials({
-  anchorBox:   { diffuseColor: '#00ffcc', lightingModel: 'Constant' },
-  dummyTrunk:  { diffuseColor: '#7B4F2E', lightingModel: 'Constant' },
-  dummyHead:   { diffuseColor: '#C88B4C', lightingModel: 'Constant' },
-  dummyFlash:  { diffuseColor: '#FF3300', lightingModel: 'Constant' },
+  anchorBox:     { diffuseColor: '#00ffcc', lightingModel: 'Constant' },
+  dummyBlueBody: { diffuseColor: '#3b82f6', lightingModel: 'Constant' },
+  dummyBlueHead: { diffuseColor: '#1e40af', lightingModel: 'Constant' },
+  dummyRedBody:  { diffuseColor: '#ef4444', lightingModel: 'Constant' },
+  dummyRedHead:  { diffuseColor: '#991b1b', lightingModel: 'Constant' },
 });
 
 type Vec3    = [number, number, number];
@@ -31,9 +33,7 @@ interface SceneProps {
   phase:              ARPhase;
   onAnchorPlaced?:    (pos: Vec3) => void;
   onCameraTransform?: (e: any) => void;
-  anchorPos?:         Vec3;
-  dummyDead?:         boolean;
-  dummyHit?:          boolean;
+  dummies?:           Dummy[];
 }
 
 interface Props {
@@ -41,7 +41,8 @@ interface Props {
 }
 
 export function MainARScene({ sceneNavigator }: Props) {
-  const { phase, onAnchorPlaced, onCameraTransform, anchorPos, dummyDead, dummyHit } = sceneNavigator?.viroAppProps ?? {};
+  const { phase, onAnchorPlaced, onCameraTransform, dummies = [] } =
+    sceneNavigator?.viroAppProps ?? {};
 
   const [plane,          setPlane]          = useState<PlaneAnchor | null>(null);
   const [anchorLocalPos, setAnchorLocalPos] = useState<Vec3 | null>(null);
@@ -73,23 +74,21 @@ export function MainARScene({ sceneNavigator }: Props) {
 
   return (
     <ViroARScene onCameraTransformUpdate={onCameraTransform}>
-      {/* 3D tree-trunk dummy — visible during game, hidden when dead */}
-      {phase === 'game' && !dummyDead && anchorPos && (
-        <ViroNode position={anchorPos}>
-          {/* Body — rectangular trunk */}
+      {/* Static blue/red dummies — rendered in game phase */}
+      {phase === 'game' && dummies.map(d => !d.dead && (
+        <ViroNode key={d.id} position={d.pos}>
           <ViroBox
-            scale={[0.18, 0.75, 0.18]}
-            position={[0, 0.375, 0]}
-            materials={[dummyHit ? 'dummyFlash' : 'dummyTrunk']}
+            scale={[0.18, 0.6, 0.18]}
+            position={[0, 0.3, 0]}
+            materials={[d.color === 'blue' ? 'dummyBlueBody' : 'dummyRedBody']}
           />
-          {/* Head */}
           <ViroSphere
             radius={0.11}
-            position={[0, 0.86, 0]}
-            materials={[dummyHit ? 'dummyFlash' : 'dummyHead']}
+            position={[0, 0.7, 0]}
+            materials={[d.color === 'blue' ? 'dummyBlueHead' : 'dummyRedHead']}
           />
         </ViroNode>
-      )}
+      ))}
 
       {phase === 'scan' && (
         <>

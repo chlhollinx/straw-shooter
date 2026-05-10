@@ -1,11 +1,16 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { MenuScreen } from './src/screens/MenuScreen';
 import { GameScreen } from './src/screens/GameScreen';
 import { GameOverScreen } from './src/screens/GameOverScreen';
 import { MainARScene } from './src/ar/MainARScene';
 import { ARSceneNavigator } from './src/ar/ARSceneNavigator';
-import { useARCameraPose } from './src/game/useARCameraPose';
+import { useARCameraPose, projectToScreen } from './src/game/useARCameraPose';
+import { useDummies, type Dummy } from './src/game/useDummies';
+
+const { width: W, height: H } = Dimensions.get('window');
+const HITBOX_RADIUS = 120; // px from crosshair — generous for AR aim feel
 
 type Screen  = 'menu' | 'ar' | 'gameover';
 type ARPhase = 'scan' | 'game';
@@ -13,28 +18,53 @@ type ARPhase = 'scan' | 'game';
 export default function App() {
   const [screen,     setScreen]     = useState<Screen>('menu');
   const [arPhase,    setARPhase]    = useState<ARPhase>('scan');
-  const [anchorPos,  setAnchorPos]  = useState<[number, number, number]>([0, 0, -2]);
   const [finalScore, setFinalScore] = useState(0);
   const [finalHits,  setFinalHits]  = useState(0);
   const [finalWave,  setFinalWave]  = useState(1);
 
-  const [dummyDead, setDummyDead] = useState(false);
-  const [dummyHit,  setDummyHit]  = useState(false);
+  const { cameraStateRef, onCameraTransform } = useARCameraPose();
+  const { dummies, spawn, hitDummy, reset }   = useDummies();
 
-  const { pos, onCameraTransform } = useARCameraPose(anchorPos);
+  // Stable read of the latest dummies array inside tryHit (avoids stale closures)
+  const dummiesRef = useRef(dummies);
+  useEffect(() => { dummiesRef.current = dummies; }, [dummies]);
 
-  const handleAnchorPlaced = (worldPos: [number, number, number]) => {
-    setAnchorPos(worldPos);
-    setDummyDead(false);
-    setARPhase('game');
+  const tryHit = useCallback((): Dummy | null => {
+    const cam = cameraStateRef.current;
+    if (!cam) return null;
+
+    let best: Dummy | null = null;
+    let bestDist = Infinity;
+
+    for (const d of dummiesRef.current) {
+      if (d.dead) continue;
+      // Aim at the dummy's body center, not its feet
+      const aim: [number, number, number] = [d.pos[0], d.pos[1] + 0.4, d.pos[2]];
+      const s = projectToScreen(aim, cam);
+      if (!s.visible) continue;
+      const dx = s.x - W / 2;
+      const dy = s.y - H / 2;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < HITBOX_RADIUS && dist < bestDist) {
+        bestDist = dist;
+        best = d;
+      }
+    }
+
+    if (best) hitDummy(best.id);
+    return best;
+  }, [hitDummy, cameraStateRef]);
+
+  const handleStart = () => {
+    reset();
+    setARPhase('scan');
+    setScreen('ar');
   };
 
-  const handleDummyHit     = useCallback(() => {
-    setDummyHit(true);
-    setTimeout(() => setDummyHit(false), 250);
-  }, []);
-  const handleDummyDied    = useCallback(() => setDummyDead(true),  []);
-  const handleDummyRespawn = useCallback(() => setDummyDead(false), []);
+  const handleAnchorPlaced = (worldPos: [number, number, number]) => {
+    spawn(worldPos);
+    setARPhase('game');
+  };
 
   const handleGameOver = (score: number, hits: number, wave: number) => {
     setFinalScore(score);
@@ -43,30 +73,31 @@ export default function App() {
     setScreen('gameover');
   };
 
+  const handleRestart = () => {
+    reset();
+    setARPhase('scan');
+    setScreen('menu');
+  };
+
   return (
     <>
       <StatusBar style="light" hidden />
 
-      {screen === 'menu' && (
-        <MenuScreen onStart={() => { setARPhase('scan'); setScreen('ar'); }} />
-      )}
+      {screen === 'menu' && <MenuScreen onStart={handleStart} />}
 
       {screen === 'ar' && (
         <>
-          {/* Single AR session — persists through scan → game, never recreated */}
           <ARSceneNavigator
             scene={MainARScene}
-            sceneProps={{ phase: arPhase, onAnchorPlaced: handleAnchorPlaced, onCameraTransform, anchorPos, dummyDead, dummyHit }}
+            sceneProps={{
+              phase: arPhase,
+              onAnchorPlaced: handleAnchorPlaced,
+              onCameraTransform,
+              dummies,
+            }}
           />
-          {/* Game UI overlay — transparent, floats above the AR view */}
           {arPhase === 'game' && (
-            <GameScreen
-              pos={pos}
-              onGameOver={handleGameOver}
-              onDummyHit={handleDummyHit}
-              onDummyDied={handleDummyDied}
-              onDummyRespawn={handleDummyRespawn}
-            />
+            <GameScreen onGameOver={handleGameOver} onTryHit={tryHit} />
           )}
         </>
       )}
@@ -76,7 +107,7 @@ export default function App() {
           score={finalScore}
           hits={finalHits}
           wave={finalWave}
-          onRestart={() => { setARPhase('scan'); setScreen('menu'); }}
+          onRestart={handleRestart}
         />
       )}
     </>
